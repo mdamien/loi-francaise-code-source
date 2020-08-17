@@ -12,7 +12,14 @@ python -m legi.tar2sqlite legi.sqlite ./tarballs --pragma="journal_mode=WAL" --s
 ./archeo-lex --textes="code" --bddlegi=../legi.py/legi.sqlite --dates-git-pre-1970
 ./archeo-lex --textes="loi" --bddlegi=../legi.py/legi.sqlite --dates-git-pre-1970
 ./archeo-lex --textes="loi_organique" --bddlegi=../legi.py/legi.sqlite --dates-git-pre-1970
+./archeo-lex --textes="ordonnance" --bddlegi=../legi.py/legi.sqlite --dates-git-pre-1970
+./archeo-lex --textes="loi_constit" --bddlegi=../legi.py/legi.sqlite --dates-git-pre-1970
+./archeo-lex --textes="constitution" --bddlegi=../legi.py/legi.sqlite --dates-git-pre-1970
+	# pour surveiller la progression, je fais une requête SQL sur la base:
+	SELECT count(*) from textes_versions where nature="<NATURE>"
+	# que je compare avec
+	ls textes/<type>/ | wc -l
 # et pour finir
 python combiner-depots.py <chemin-vers-le-repertoire-des-textes-d-archeo-lex>
-cp README-repo.md combined/README.md
+cp README-repo.md combined/README.md; cd combined;git add README.md; git commit -m "ajoute README"
 ```
