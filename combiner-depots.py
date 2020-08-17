@@ -15,15 +15,28 @@ files = list(glob.glob(FILES + '/*/**/'))
 for repo_dir in tqdm.tqdm(files, total=len(files)):
 	try:
 		repo = git.Repo(repo_dir)
-		for commit in repo.iter_commits('texte-futur'):
-			commits.append({
-				'repo': repo_dir,
-				'commit': str(commit),
-				'date': commit.committed_date
-			})
+		found_a_good_branch = False
+		for branch in ('texte-futur', 'texte', 'texte-abrogé'):
+			try:
+				for commit in repo.iter_commits(branch):
+					found_a_good_branch = True
+					commits.append({
+						'repo': repo_dir,
+						'commit': str(commit),
+						'date': commit.committed_date,
+						'branch': branch
+					})
+				break
+			except KeyboardInterrupt:
+				raise
+			except:
+				pass
+		if not found_a_good_branch:
+			raise Exception('no good branch')
 	except KeyboardInterrupt:
 		raise
-	except:
+	except Exception as e:
+		print(e)
 		print('invalid repo', repo_dir)
 
 # sort them by date
@@ -38,7 +51,12 @@ print('Re-execution des commits...')
 for commit in tqdm.tqdm(commits, total=len(commits)):
 	commit_obj = git.Repo(commit['repo']).commit(commit['commit'])
 
-	filename = [b.name for b in commit_obj.tree.blobs][0]
+	try:
+		filename = [b.name for b in commit_obj.tree.blobs][0]
+	except:
+		print('no file found in', commit['repo'], 'at', commit['commit'], 'trying parent')
+		commit_obj = git.Repo(commit['repo']).commit(commit['commit']+'^')
+		filename = [b.name for b in commit_obj.tree.blobs][0]
 
 	filecontents = (commit_obj.tree / filename).data_stream.read().decode('utf-8')
 	open('combined/' + filename, 'w').write(filecontents)
